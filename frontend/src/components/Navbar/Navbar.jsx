@@ -7,9 +7,9 @@ import AvatarImg from './avatar.jpeg'
 const Navbar = () => {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const {authUser, logout, authRole} = useAuthStore();
+  const { authUser, logout, authRole } = useAuthStore();
 
-  const handleLogout = async() => {
+  const handleLogout = async () => {
     await logout();
   }
 
@@ -20,7 +20,7 @@ const Navbar = () => {
   const getRoleBasedNavItems = () => {
     console.log('Navbar - getRoleBasedNavItems - authUser:', authUser);
     console.log('Navbar - getRoleBasedNavItems - authRole:', authRole);
-    
+
     if (!authUser) {
       console.log('Navbar - No authUser, showing public nav items');
       return (
@@ -62,21 +62,17 @@ const Navbar = () => {
               <Map className="w-4 h-4 mr-1" />
               Scam Map
             </Link>
-            <Link to="/helpline" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
-              <Phone className="w-4 h-4 mr-1" />
-              Helpline
-            </Link>
             <Link to="/scammer-database" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Database className="w-4 h-4 mr-1" />
               Scammer DB
             </Link>
-            <Link to="/video" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+            <Link to="/educational" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Video className="w-4 h-4 mr-1" />
-              Video Gallery
+              Educational
             </Link>
           </>
         );
-      
+
       case 'authority':
         return (
           <>
@@ -98,21 +94,17 @@ const Navbar = () => {
               <Map className="w-4 h-4 mr-1" />
               Scam Map
             </Link>
-            <Link to="/helpline" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
-              <Phone className="w-4 h-4 mr-1" />
-              Helpline
-            </Link>
             <Link to="/scammer-database" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Database className="w-4 h-4 mr-1" />
               Scammer DB
             </Link>
-            <Link to="/video" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+            <Link to="/educational" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Video className="w-4 h-4 mr-1" />
-              Video Gallery
+              Educational
             </Link>
           </>
         );
-      
+
       case 'user':
       default:
         return (
@@ -136,17 +128,13 @@ const Navbar = () => {
               <Map className="w-4 h-4 mr-1" />
               Scam Map
             </Link>
-            <Link to="/helpline" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
-              <Phone className="w-4 h-4 mr-1" />
-              Helpline
-            </Link>
             <Link to="/scammer-database" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Database className="w-4 h-4 mr-1" />
               Scammer DB
             </Link>
-            <Link to="/video" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+            <Link to="/educational" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Video className="w-4 h-4 mr-1" />
-              Video Gallery
+              Educational
             </Link>
           </>
         );
@@ -213,7 +201,7 @@ const Navbar = () => {
             </li>
           </>
         );
-      
+
       case 'authority':
         return (
           <>
@@ -257,7 +245,7 @@ const Navbar = () => {
             </li>
           </>
         );
-      
+
       case 'user':
       default:
         return (
@@ -309,13 +297,13 @@ const Navbar = () => {
     <nav className="navbar bg-base-100 shadow-md px-4">
       {/* Logo Section */}
       <div className="flex-1">
-        <Link 
-          to={authUser ? 
+        <Link
+          to={authUser ?
             authRole === 'admin' ? '/admin-dashboard' :
-            authRole === 'authority' ? '/authority-dashboard' :
-            authRole === 'user' ? '/user-dashboard' :
-            '/'
-          : '/'} 
+              authRole === 'authority' ? '/authority-dashboard' :
+                authRole === 'user' ? '/user-dashboard' :
+                  '/'
+            : '/'}
           className="text-2xl font-semibold flex items-center space-x-2"
         >
           <Menu className="w-6 h-6" />

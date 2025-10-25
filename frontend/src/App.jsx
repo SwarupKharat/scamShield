@@ -42,78 +42,61 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="*" element={<div className="text-xl text-red-700 text-justify">Page not found!</div>} />
-        <Route path="/" element={
-          authUser ? 
-            authRole === 'admin' ? <Navigate to="/admin-dashboard" /> :
-            authRole === 'authority' ? <Navigate to="/authority-dashboard" /> :
-            authRole === 'user' ? <Navigate to="/user-dashboard" /> :
-            <Home />
-          : <Home />
-        } />
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={
-          authUser ? 
-            authRole === 'admin' ? <Navigate to="/admin-dashboard" /> :
-            authRole === 'authority' ? <Navigate to="/authority-dashboard" /> :
-            authRole === 'user' ? <Navigate to="/user-dashboard" /> :
-            <Navigate to="/" />
-          : <Login />
+          authUser ? <Navigate to="/" /> : <Login />
         } />
         <Route path="/signup" element={
-          authUser ? 
-            authRole === 'admin' ? <Navigate to="/admin-dashboard" /> :
-            authRole === 'authority' ? <Navigate to="/authority-dashboard" /> :
-            authRole === 'user' ? <Navigate to="/user-dashboard" /> :
-            <Navigate to="/" />
-          : <Signup />
+          authUser ? <Navigate to="/" /> : <Signup />
         } />
         <Route path="/incidents" element={<Incidents />} />
-        <Route path="/community" element={!authUser ? <Navigate to='/login'/>: <Community />} />
-            <Route path="/map" element={<MapPage />} />
-            <Route path="/helpline" element={<Helpline />} />
-            <Route path="/scammer-database" element={<ScammerDatabase />} />
-            <Route path="/video" element={<VideoGallery/>} />
-            <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/community" element={!authUser ? <Navigate to='/login' /> : <Community />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/helpline" element={<Helpline />} />
+        <Route path="/scammer-database" element={<ScammerDatabase />} />
+        <Route path="/educational" element={<VideoGallery />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/view-user/:id" element={<UserProfile />} />
-        <Route path="/report" element={!authUser ? <Navigate to='/login'/>: <IncidentForm />} />
+        <Route path="/report" element={!authUser ? <Navigate to='/login' /> : <IncidentForm />} />
         <Route path="/check-approval" element={<CheckApproval />} />
         <Route path="/profile" element={!authUser ? <Navigate to="/login" /> : <Profile user={authUser} />} />
         <Route path="/announcements" element={!authUser ? <Navigate to="/login" /> : <Announcements />} />
         <Route path="/view-registrations" element={!authUser ? <Navigate to="/login" /> : <ViewRegistrations />} />
         <Route path="/view-incident" element={!authUser ? <Navigate to="/login" /> : <ViewIncident />} />
         <Route path="/view-report" element={!authUser ? <Navigate to="/login" /> : <ViewReport />} />
-        
+
         {/* Dashboard Routes */}
-        <Route 
-          path="/admin-dashboard" 
+        <Route
+          path="/admin-dashboard"
           element={
-            !authUser ? <Navigate to="/login" /> : 
-            authRole !== 'admin' ? <Navigate to="/" /> : 
-            <AdminDashboard />
-          } 
+            !authUser ? <Navigate to="/login" /> :
+              authRole !== 'admin' ? <Navigate to="/" /> :
+                <AdminDashboard />
+          }
         />
-        <Route 
-          path="/authority-dashboard" 
+        <Route
+          path="/authority-dashboard"
           element={
-            !authUser ? <Navigate to="/login" /> : 
-            authRole !== 'authority' ? <Navigate to="/" /> : 
-            <AuthorityDashboard />
-          } 
+            !authUser ? <Navigate to="/login" /> :
+              authRole !== 'authority' ? <Navigate to="/" /> :
+                <AuthorityDashboard />
+          }
         />
-        <Route 
-          path="/user-dashboard" 
+        <Route
+          path="/user-dashboard"
           element={
-            !authUser ? <Navigate to="/login" /> : 
-            authRole !== 'user' ? <Navigate to="/" /> : 
-            <UserDashboard />
-          } 
+            !authUser ? <Navigate to="/login" /> :
+              authRole !== 'user' ? <Navigate to="/" /> :
+                <UserDashboard />
+          }
         />
-        <Route 
-          path="/admin/points-management" 
+        <Route
+          path="/admin/points-management"
           element={
-            !authUser ? <Navigate to="/login" /> : 
-            authRole !== 'admin' ? <Navigate to="/" /> : 
-            <PointsManagement />
-          } 
+            !authUser ? <Navigate to="/login" /> :
+              authRole !== 'admin' ? <Navigate to="/" /> :
+                <PointsManagement />
+          }
         />
       </Routes>
       <Footer />

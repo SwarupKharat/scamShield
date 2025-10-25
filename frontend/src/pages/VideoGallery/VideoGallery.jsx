@@ -5,6 +5,7 @@ import UploadVideoModal from '../../components/UploadVideoModal/UploadVideoModal
 import VideoCard from '../../components/VideoCard/VideoCard';
 import VideoStats from '../../components/VideoStats/VideoStats';
 import { toast } from 'react-hot-toast';
+import { BookOpen, Shield, Lock, Smartphone, CreditCard, Globe, AlertTriangle } from 'lucide-react';
 
 const VideoGallery = () => {
   const { authUser } = useAuthStore();
@@ -12,10 +13,9 @@ const VideoGallery = () => {
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [filters, setFilters] = useState({
-    scamType: '',
-    region: '',
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
+    category: '',
+    sortBy: 'title',
+    sortOrder: 'asc'
   });
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -25,82 +25,101 @@ const VideoGallery = () => {
     hasPrev: false
   });
 
-  const fetchVideos = async (page = 1) => {
-    try {
-      setLoading(true);
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        limit: '12',
-        ...filters
-      });
+  // Educational videos data
+  const educationalVideos = [
+    // Password Security
+    { id: 1, title: "Creating Strong Passwords", category: "password", duration: "5:30", description: "Learn how to create and manage strong passwords", videoId: "dQw4w9WgXcQ" },
+    { id: 2, title: "Password Manager Basics", category: "password", duration: "7:15", description: "Introduction to password managers and their benefits", videoId: "dQw4w9WgXcQ" },
+    { id: 3, title: "Two-Factor Authentication", category: "password", duration: "4:45", description: "Setting up and using 2FA for better security", videoId: "dQw4w9WgXcQ" },
 
-      const response = await axiosInstance.get(`/videos?${queryParams}`);
+    // Phishing Awareness
+    { id: 4, title: "Identifying Phishing Emails", category: "phishing", duration: "6:20", description: "How to spot and avoid phishing attempts", videoId: "dQw4w9WgXcQ" },
+    { id: 5, title: "SMS Phishing (Smishing)", category: "phishing", duration: "5:10", description: "Protecting yourself from SMS-based scams", videoId: "dQw4w9WgXcQ" },
+    { id: 6, title: "Social Media Scams", category: "phishing", duration: "8:30", description: "Common scams on social media platforms", videoId: "dQw4w9WgXcQ" },
 
-      if (response.data.success) {
-        setVideos(response.data.data.videos || []);
-        setPagination(response.data.data.pagination || {});
-      }
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-      toast.error('Failed to fetch videos');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Banking Security
+    { id: 7, title: "Online Banking Safety", category: "banking", duration: "6:45", description: "Best practices for secure online banking", videoId: "dQw4w9WgXcQ" },
+    { id: 8, title: "UPI Security Tips", category: "banking", duration: "5:25", description: "How to use UPI safely and avoid fraud", videoId: "dQw4w9WgXcQ" },
+    { id: 9, title: "Credit Card Fraud Prevention", category: "banking", duration: "7:00", description: "Protecting your credit card from fraud", videoId: "dQw4w9WgXcQ" },
+
+    // Mobile Security
+    { id: 10, title: "Mobile App Security", category: "mobile", duration: "6:15", description: "Keeping your mobile apps secure", videoId: "dQw4w9WgXcQ" },
+    { id: 11, title: "Public WiFi Safety", category: "mobile", duration: "5:40", description: "Using public WiFi networks safely", videoId: "dQw4w9WgXcQ" },
+    { id: 12, title: "Mobile Device Updates", category: "mobile", duration: "4:20", description: "Importance of keeping your device updated", videoId: "dQw4w9WgXcQ" },
+
+    // Internet Safety
+    { id: 13, title: "Safe Browsing Habits", category: "internet", duration: "7:30", description: "How to browse the internet safely", videoId: "dQw4w9WgXcQ" },
+    { id: 14, title: "VPN and Privacy", category: "internet", duration: "8:15", description: "Understanding VPNs and online privacy", videoId: "dQw4w9WgXcQ" },
+    { id: 15, title: "Cookie Management", category: "internet", duration: "5:50", description: "Managing cookies for better privacy", videoId: "dQw4w9WgXcQ" },
+
+    // Social Engineering
+    { id: 16, title: "Social Engineering Attacks", category: "social", duration: "9:00", description: "Understanding and preventing social engineering", videoId: "dQw4w9WgXcQ" },
+    { id: 17, title: "Phone Scam Prevention", category: "social", duration: "6:35", description: "How to avoid phone-based scams", videoId: "dQw4w9WgXcQ" },
+    { id: 18, title: "Investment Scam Awareness", category: "social", duration: "8:45", description: "Recognizing and avoiding investment scams", videoId: "dQw4w9WgXcQ" },
+
+    // Data Protection
+    { id: 19, title: "Data Backup Strategies", category: "data", duration: "7:20", description: "How to backup your important data", videoId: "dQw4w9WgXcQ" },
+    { id: 20, title: "Cloud Storage Security", category: "data", duration: "6:10", description: "Securing your cloud storage accounts", videoId: "dQw4w9WgXcQ" },
+    { id: 21, title: "Personal Information Protection", category: "data", duration: "8:20", description: "Protecting your personal information online", videoId: "dQw4w9WgXcQ" },
+
+    // Advanced Topics
+    { id: 22, title: "Cryptocurrency Security", category: "advanced", duration: "10:15", description: "Securing your cryptocurrency investments", videoId: "dQw4w9WgXcQ" },
+    { id: 23, title: "IoT Device Security", category: "advanced", duration: "7:45", description: "Securing Internet of Things devices", videoId: "dQw4w9WgXcQ" },
+    { id: 24, title: "Digital Forensics Basics", category: "advanced", duration: "9:30", description: "Introduction to digital forensics", videoId: "dQw4w9WgXcQ" },
+    { id: 25, title: "Incident Response Planning", category: "advanced", duration: "8:50", description: "Creating an incident response plan", videoId: "dQw4w9WgXcQ" }
+  ];
 
   useEffect(() => {
-    fetchVideos();
-  }, [filters]);
+    setLoading(false);
+  }, []);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-    setPagination(prev => ({ ...prev, currentPage: 1 }));
   };
 
-  const handlePageChange = (page) => {
-    fetchVideos(page);
+  const getCategoryIcon = (category) => {
+    switch (category) {
+      case 'password': return <Lock className="w-5 h-5" />;
+      case 'phishing': return <AlertTriangle className="w-5 h-5" />;
+      case 'banking': return <CreditCard className="w-5 h-5" />;
+      case 'mobile': return <Smartphone className="w-5 h-5" />;
+      case 'internet': return <Globe className="w-5 h-5" />;
+      case 'social': return <Shield className="w-5 h-5" />;
+      case 'data': return <BookOpen className="w-5 h-5" />;
+      case 'advanced': return <Shield className="w-5 h-5" />;
+      default: return <BookOpen className="w-5 h-5" />;
+    }
   };
 
-  const handleVideoUploaded = () => {
-    setShowUploadModal(false);
-    fetchVideos(1);
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'password': return 'bg-blue-100 text-blue-800';
+      case 'phishing': return 'bg-red-100 text-red-800';
+      case 'banking': return 'bg-green-100 text-green-800';
+      case 'mobile': return 'bg-purple-100 text-purple-800';
+      case 'internet': return 'bg-orange-100 text-orange-800';
+      case 'social': return 'bg-yellow-100 text-yellow-800';
+      case 'data': return 'bg-indigo-100 text-indigo-800';
+      case 'advanced': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleVideoDeleted = (videoId) => {
-    setVideos(prev => prev.filter(video => video._id !== videoId));
-    toast.success('Video deleted successfully!');
-  };
-
-  const handleVoteUpdate = (videoId, upvotes, downvotes) => {
-    setVideos(prev => prev.map(video => 
-      video._id === videoId 
-        ? { ...video, votes: { ...video.votes, upvotes, downvotes } }
-        : video
-    ));
-  };
-
-  const scamTypes = [
-    { value: '', label: 'All Scam Types' },
-    { value: 'phishing', label: 'Phishing' },
-    { value: 'investment', label: 'Investment Scams' },
-    { value: 'romance', label: 'Romance Scams' },
-    { value: 'tech-support', label: 'Tech Support Scams' },
-    { value: 'fake-calls', label: 'Fake Calls' },
-    { value: 'social-media', label: 'Social Media Scams' },
-    { value: 'upi-fraud', label: 'UPI Fraud' },
-    { value: 'banking', label: 'Banking Scams' },
-    { value: 'other', label: 'Other' }
+  const categories = [
+    { value: '', label: 'All Categories' },
+    { value: 'password', label: 'Password Security' },
+    { value: 'phishing', label: 'Phishing Awareness' },
+    { value: 'banking', label: 'Banking Security' },
+    { value: 'mobile', label: 'Mobile Security' },
+    { value: 'internet', label: 'Internet Safety' },
+    { value: 'social', label: 'Social Engineering' },
+    { value: 'data', label: 'Data Protection' },
+    { value: 'advanced', label: 'Advanced Topics' }
   ];
 
-  const regions = [
-    { value: '', label: 'All Regions' },
-    { value: 'North', label: 'North India' },
-    { value: 'South', label: 'South India' },
-    { value: 'East', label: 'East India' },
-    { value: 'West', label: 'West India' },
-    { value: 'Central', label: 'Central India' },
-    { value: 'Northeast', label: 'Northeast India' }
-  ];
+  const filteredVideos = educationalVideos.filter(video =>
+    filters.category === '' || video.category === filters.category
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -108,58 +127,42 @@ const VideoGallery = () => {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Video Gallery</h1>
+              <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+                <BookOpen className="w-8 h-8 mr-3 text-blue-600" />
+                Digital Hygiene Education
+              </h1>
               <p className="text-gray-600 mt-2">
-                Watch and share scam awareness videos from your community
+                Learn essential digital security practices through comprehensive video tutorials
               </p>
             </div>
-            {authUser && (
-              <button
-                onClick={() => setShowUploadModal(true)}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Upload Video
-              </button>
-            )}
           </div>
 
-          <VideoStats />
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
+            <div className="flex items-center mb-4">
+              <Shield className="w-6 h-6 text-blue-600 mr-2" />
+              <h2 className="text-xl font-semibold text-blue-900">Why Digital Hygiene Matters</h2>
+            </div>
+            <p className="text-blue-800">
+              Digital hygiene is the practice of maintaining good security habits online. Our comprehensive video library
+              covers everything from basic password security to advanced threat protection, helping you stay safe in the digital world.
+            </p>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Scam Type
+                Category
               </label>
               <select
-                value={filters.scamType}
-                onChange={(e) => handleFilterChange('scamType', e.target.value)}
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {scamTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Region
-              </label>
-              <select
-                value={filters.region}
-                onChange={(e) => handleFilterChange('region', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {regions.map(region => (
-                  <option key={region.value} value={region.value}>
-                    {region.label}
+                {categories.map(category => (
+                  <option key={category.value} value={category.value}>
+                    {category.label}
                   </option>
                 ))}
               </select>
@@ -174,10 +177,9 @@ const VideoGallery = () => {
                 onChange={(e) => handleFilterChange('sortBy', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="createdAt">Newest First</option>
-                <option value="votes.upvotes">Most Upvoted</option>
-                <option value="views">Most Viewed</option>
-                <option value="comments">Most Comments</option>
+                <option value="title">Title A-Z</option>
+                <option value="duration">Duration</option>
+                <option value="category">Category</option>
               </select>
             </div>
 
@@ -190,8 +192,8 @@ const VideoGallery = () => {
                 onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="desc">Descending</option>
                 <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
               </select>
             </div>
           </div>
@@ -202,83 +204,55 @@ const VideoGallery = () => {
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             </div>
-          ) : videos.length === 0 ? (
-            <div className="text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              <div className="text-gray-500 text-lg mb-2 mt-4">No videos found</div>
-              <p className="text-gray-400">Be the first to upload a video!</p>
-            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map(video => (
-                <VideoCard
-                  key={video._id}
-                  video={video}
-                  onDelete={handleVideoDeleted}
-                  onVoteUpdate={handleVoteUpdate}
-                />
+              {filteredVideos.map(video => (
+                <div key={video.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                  <div className="aspect-video bg-gray-100 rounded-t-lg relative">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${video.videoId}`}
+                      title={video.title}
+                      className="w-full h-full rounded-t-lg"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+                      {video.duration}
+                    </div>
+                  </div>
+
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        {getCategoryIcon(video.category)}
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${getCategoryColor(video.category)}`}>
+                          {categories.find(cat => cat.value === video.category)?.label || video.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+                      {video.title}
+                    </h3>
+
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {video.description}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">
+                        Duration: {video.duration}
+                      </span>
+                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                        Watch Now →
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </div>
-
-        {pagination.totalPages > 1 && (
-          <div className="flex justify-center mt-8">
-            <nav className="flex items-center space-x-2">
-              <button
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={!pagination.hasPrev}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              
-              {Array.from({ length: Math.min(pagination.totalPages, 5) }, (_, i) => {
-                let page;
-                if (pagination.totalPages <= 5) {
-                  page = i + 1;
-                } else if (pagination.currentPage <= 3) {
-                  page = i + 1;
-                } else if (pagination.currentPage >= pagination.totalPages - 2) {
-                  page = pagination.totalPages - 4 + i;
-                } else {
-                  page = pagination.currentPage - 2 + i;
-                }
-                
-                return (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-3 py-2 text-sm font-medium rounded-md ${
-                      page === pagination.currentPage
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-              
-              <button
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={!pagination.hasNext}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </nav>
-          </div>
-        )}
-
-        {showUploadModal && (
-          <UploadVideoModal
-            onClose={() => setShowUploadModal(false)}
-            onVideoUploaded={handleVideoUploaded}
-          />
-        )}
       </div>
     </div>
   );
