@@ -28,45 +28,45 @@ const VideoGallery = () => {
   // Educational videos data
   const educationalVideos = [
     // Password Security
-    { id: 1, title: "Creating Strong Passwords", category: "password", duration: "5:30", description: "Learn how to create and manage strong passwords", videoId: "dQw4w9WgXcQ" },
-    { id: 2, title: "Password Manager Basics", category: "password", duration: "7:15", description: "Introduction to password managers and their benefits", videoId: "dQw4w9WgXcQ" },
-    { id: 3, title: "Two-Factor Authentication", category: "password", duration: "4:45", description: "Setting up and using 2FA for better security", videoId: "dQw4w9WgXcQ" },
+    { id: 1, title: "Creating Strong Passwords", category: "password", duration: "5:30", description: "Learn how to create and manage strong passwords", videoId: "h_WZk-_TWh0" },
+    { id: 2, title: "Password Manager Basics", category: "password", duration: "7:15", description: "Introduction to password managers and their benefits", videoId: "wcDtLMraTkQ" },
+    { id: 3, title: "Two-Factor Authentication", category: "password", duration: "4:45", description: "Setting up and using 2FA for better security", videoId: "hGRii5f_uSc" },
 
     // Phishing Awareness
-    { id: 4, title: "Identifying Phishing Emails", category: "phishing", duration: "6:20", description: "How to spot and avoid phishing attempts", videoId: "dQw4w9WgXcQ" },
-    { id: 5, title: "SMS Phishing (Smishing)", category: "phishing", duration: "5:10", description: "Protecting yourself from SMS-based scams", videoId: "dQw4w9WgXcQ" },
-    { id: 6, title: "Social Media Scams", category: "phishing", duration: "8:30", description: "Common scams on social media platforms", videoId: "dQw4w9WgXcQ" },
+    { id: 4, title: "Identifying Phishing Emails", category: "phishing", duration: "6:20", description: "How to spot and avoid phishing attempts", videoId: "o0btqyGWIQw" },
+    { id: 5, title: "SMS Phishing (Smishing)", category: "phishing", duration: "5:10", description: "Protecting yourself from SMS-based scams", videoId: "ZOZGQeG8avQ" },
+    { id: 6, title: "Social Media Scams", category: "phishing", duration: "8:30", description: "Common scams on social media platforms", videoId: "cLoXQb5M6oI" },
 
     // Banking Security
-    { id: 7, title: "Online Banking Safety", category: "banking", duration: "6:45", description: "Best practices for secure online banking", videoId: "dQw4w9WgXcQ" },
-    { id: 8, title: "UPI Security Tips", category: "banking", duration: "5:25", description: "How to use UPI safely and avoid fraud", videoId: "dQw4w9WgXcQ" },
-    { id: 9, title: "Credit Card Fraud Prevention", category: "banking", duration: "7:00", description: "Protecting your credit card from fraud", videoId: "dQw4w9WgXcQ" },
+    { id: 7, title: "Online Banking Safety", category: "banking", duration: "6:45", description: "Best practices for secure online banking", videoId: "F5l2BucBfKY" },
+    { id: 8, title: "UPI Security Tips", category: "banking", duration: "5:25", description: "How to use UPI safely and avoid fraud", videoId: "i7DcdpKxPsA" },
+    { id: 9, title: "Credit Card Fraud Prevention", category: "banking", duration: "7:00", description: "Protecting your credit card from fraud", videoId: "z19Z6ckRp-c" },
 
     // Mobile Security
-    { id: 10, title: "Mobile App Security", category: "mobile", duration: "6:15", description: "Keeping your mobile apps secure", videoId: "dQw4w9WgXcQ" },
-    { id: 11, title: "Public WiFi Safety", category: "mobile", duration: "5:40", description: "Using public WiFi networks safely", videoId: "dQw4w9WgXcQ" },
-    { id: 12, title: "Mobile Device Updates", category: "mobile", duration: "4:20", description: "Importance of keeping your device updated", videoId: "dQw4w9WgXcQ" },
+    { id: 10, title: "Mobile App Security", category: "mobile", duration: "6:15", description: "Keeping your mobile apps secure", videoId: "A-mSTDqpMGs" },
+    { id: 11, title: "Public WiFi Safety", category: "mobile", duration: "5:40", description: "Using public WiFi networks safely", videoId: "XcghUy-8VRA" },
+    { id: 12, title: "Mobile Device Updates", category: "mobile", duration: "4:20", description: "Importance of keeping your device updated", videoId: "MmJRgefohcA&t=55s" },
 
     // Internet Safety
-    { id: 13, title: "Safe Browsing Habits", category: "internet", duration: "7:30", description: "How to browse the internet safely", videoId: "dQw4w9WgXcQ" },
-    { id: 14, title: "VPN and Privacy", category: "internet", duration: "8:15", description: "Understanding VPNs and online privacy", videoId: "dQw4w9WgXcQ" },
-    { id: 15, title: "Cookie Management", category: "internet", duration: "5:50", description: "Managing cookies for better privacy", videoId: "dQw4w9WgXcQ" },
+    { id: 13, title: "Safe Browsing Habits", category: "internet", duration: "7:30", description: "How to browse the internet safely", videoId: "aO858HyFbKI" },
+    { id: 14, title: "VPN and Privacy", category: "internet", duration: "8:15", description: "Understanding VPNs and online privacy", videoId: "KioLyGgeX8&t=161s" },
+    { id: 15, title: "Cookie Management", category: "internet", duration: "5:50", description: "Managing cookies for better privacy", videoId: "s04Vjlcgwco" },
 
     // Social Engineering
-    { id: 16, title: "Social Engineering Attacks", category: "social", duration: "9:00", description: "Understanding and preventing social engineering", videoId: "dQw4w9WgXcQ" },
-    { id: 17, title: "Phone Scam Prevention", category: "social", duration: "6:35", description: "How to avoid phone-based scams", videoId: "dQw4w9WgXcQ" },
-    { id: 18, title: "Investment Scam Awareness", category: "social", duration: "8:45", description: "Recognizing and avoiding investment scams", videoId: "dQw4w9WgXcQ" },
+    { id: 16, title: "Social Engineering Attacks", category: "social", duration: "9:00", description: "Understanding and preventing social engineering", videoId: "uvKTMgWRPw4" },
+    { id: 17, title: "Phone Scam Prevention", category: "social", duration: "6:35", description: "How to avoid phone-based scams", videoId: "SbYHbK5bO0w" },
+    { id: 18, title: "Investment Scam Awareness", category: "social", duration: "8:45", description: "Recognizing and avoiding investment scams", videoId: "gPXXO4DrNPs" },
 
     // Data Protection
-    { id: 19, title: "Data Backup Strategies", category: "data", duration: "7:20", description: "How to backup your important data", videoId: "dQw4w9WgXcQ" },
-    { id: 20, title: "Cloud Storage Security", category: "data", duration: "6:10", description: "Securing your cloud storage accounts", videoId: "dQw4w9WgXcQ" },
-    { id: 21, title: "Personal Information Protection", category: "data", duration: "8:20", description: "Protecting your personal information online", videoId: "dQw4w9WgXcQ" },
+    { id: 19, title: "Data Backup Strategies", category: "data", duration: "7:20", description: "How to backup your important data", videoId: "ji0SQzpOlBw" },
+    { id: 20, title: "Cloud Storage Security", category: "data", duration: "6:10", description: "Securing your cloud storage accounts", videoId: "8YY10H0HjuI" },
+    { id: 21, title: "Personal Information Protection", category: "data", duration: "8:20", description: "Protecting your personal information online", videoId: "BgisJMjMCqE" },
 
     // Advanced Topics
-    { id: 22, title: "Cryptocurrency Security", category: "advanced", duration: "10:15", description: "Securing your cryptocurrency investments", videoId: "dQw4w9WgXcQ" },
-    { id: 23, title: "IoT Device Security", category: "advanced", duration: "7:45", description: "Securing Internet of Things devices", videoId: "dQw4w9WgXcQ" },
-    { id: 24, title: "Digital Forensics Basics", category: "advanced", duration: "9:30", description: "Introduction to digital forensics", videoId: "dQw4w9WgXcQ" },
-    { id: 25, title: "Incident Response Planning", category: "advanced", duration: "8:50", description: "Creating an incident response plan", videoId: "dQw4w9WgXcQ" }
+    { id: 22, title: "Cryptocurrency Security", category: "advanced", duration: "10:15", description: "Securing your cryptocurrency investments", videoId: "RWywXYbx7jI" },
+    { id: 23, title: "IoT Device Security", category: "advanced", duration: "7:45", description: "Securing Internet of Things devices", videoId: "7zWVxrjjIpE" },
+    { id: 24, title: "Digital Forensics Basics", category: "advanced", duration: "9:30", description: "Introduction to digital forensics", videoId: "w2xItujdLag" },
+    { id: 25, title: "Incident Response Planning", category: "advanced", duration: "8:50", description: "Creating an incident response plan", videoId: "X2UiMLxRdhE" }
   ];
 
   useEffect(() => {
