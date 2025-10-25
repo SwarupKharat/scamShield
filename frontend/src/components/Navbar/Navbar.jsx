@@ -70,6 +70,10 @@ const Navbar = () => {
               <Video className="w-4 h-4 mr-1" />
               Educational
             </Link>
+            <Link to="/scam-detector" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+              <Video className="w-4 h-4 mr-1" />
+              Ai Detector
+            </Link>
           </>
         );
 

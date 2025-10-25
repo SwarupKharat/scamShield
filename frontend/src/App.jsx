@@ -27,6 +27,7 @@ import ScammerDatabase from "./pages/ScammerDatabase/ScammerDatabase";
 import VideoGallery from './pages/VideoGallery/VideoGallery';
 import Leaderboard from './pages/Leaderboard/Leaderboard';
 import PointsManagement from './pages/AdminDashboard/PointsManagement';
+import ScamDetector from "./pages/ScamDetector/scamdetector";
 
 function App() {
   const { authUser, authRole, initializeAuth } = useAuthStore();
@@ -56,6 +57,7 @@ function App() {
         <Route path="/scammer-database" element={<ScammerDatabase />} />
         <Route path="/educational" element={<VideoGallery />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/scam-detector" element={<ScamDetector />} />
         <Route path="/view-user/:id" element={<UserProfile />} />
         <Route path="/report" element={!authUser ? <Navigate to='/login' /> : <IncidentForm />} />
         <Route path="/check-approval" element={<CheckApproval />} />
