@@ -8,10 +8,12 @@ import {
   RefreshControl,
   TextInput,
   Alert,
+  Modal,
 } from 'react-native';
-import { API_BASE_URL } from '../../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+
+const API_BASE_URL = 'http://192.168.1.6:5000';
 
 const CommunityScreen = ({ navigation }) => {
   const [posts, setPosts] = useState([]);
@@ -50,9 +52,24 @@ const CommunityScreen = ({ navigation }) => {
       if (response.ok) {
         const data = await response.json();
         console.log('Community posts data:', data);
-        setPosts(data.posts || data.data || []);
+        
+        // Handle nested data structure
+        let postsArray = [];
+        if (data.data && data.data.posts) {
+          postsArray = data.data.posts;
+        } else if (data.posts) {
+          postsArray = data.posts;
+        } else if (Array.isArray(data.data)) {
+          postsArray = data.data;
+        } else if (Array.isArray(data)) {
+          postsArray = data;
+        }
+        
+        console.log('Extracted posts array:', postsArray.length, 'posts');
+        setPosts(Array.isArray(postsArray) ? postsArray : []);
       } else {
         console.log('Failed to fetch posts:', response.status);
+        setPosts([]); // Set empty array on error
         Toast.show({
           type: 'error',
           text1: 'Failed to load posts',
@@ -61,6 +78,12 @@ const CommunityScreen = ({ navigation }) => {
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setPosts([]); // Set empty array on error
+      Toast.show({
+        type: 'error',
+        text1: 'Network Error',
+        text2: 'Could not connect to server',
+      });
     } finally {
       setLoading(false);
     }
@@ -78,6 +101,11 @@ const CommunityScreen = ({ navigation }) => {
       return;
     }
 
+    if (newPost.pincode.length !== 6) {
+      Alert.alert('Error', 'Pincode must be 6 digits');
+      return;
+    }
+
     try {
       const token = await AsyncStorage.getItem('token');
       const tags = newPost.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
@@ -91,8 +119,13 @@ const CommunityScreen = ({ navigation }) => {
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          ...newPost,
-          tags,
+          title: newPost.title,
+          content: newPost.content,
+          scamType: newPost.scamType,
+          region: newPost.region,
+          pincode: newPost.pincode,
+          isAnonymous: newPost.isAnonymous,
+          tags: tags,
         }),
       });
 
@@ -124,6 +157,7 @@ const CommunityScreen = ({ navigation }) => {
         });
       }
     } catch (error) {
+      console.error('Error creating post:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -147,11 +181,14 @@ const CommunityScreen = ({ navigation }) => {
     return colors[type] || '#95a5a6';
   };
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.scamType.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Safe filtering with array check
+  const filteredPosts = Array.isArray(posts) 
+    ? posts.filter(post =>
+        (post.title?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (post.content?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+        (post.scamType?.toLowerCase() || '').includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   if (loading) {
     return (
@@ -169,7 +206,7 @@ const CommunityScreen = ({ navigation }) => {
         </TouchableOpacity>
         <Text style={styles.title}>Community</Text>
         <TouchableOpacity onPress={() => setShowCreateModal(true)}>
-          <Text style={styles.createButton}>+ Create</Text>
+          <Text style={styles.createButtonHeader}>+ Create</Text>
         </TouchableOpacity>
       </View>
 
@@ -188,45 +225,59 @@ const CommunityScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {filteredPosts.map((post) => (
-          <View key={post._id} style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <Text style={styles.postTitle}>{post.title}</Text>
-              <View style={[styles.scamTypeBadge, { backgroundColor: getScamTypeColor(post.scamType) }]}>
-                <Text style={styles.scamTypeText}>
-                  {post.scamType.replace('-', ' ').toUpperCase()}
-                </Text>
-              </View>
-            </View>
-            
-            <Text style={styles.postContent} numberOfLines={3}>
-              {post.content}
+        {filteredPosts.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No posts found</Text>
+            <Text style={styles.emptySubtext}>
+              Be the first to share your experience!
             </Text>
-            
-            <View style={styles.postMeta}>
-              <Text style={styles.postAuthor}>
-                {post.isAnonymous ? 'Anonymous' : post.author?.name || 'Unknown'}
+          </View>
+        ) : (
+          filteredPosts.map((post) => (
+            <View key={post._id} style={styles.postCard}>
+              <View style={styles.postHeader}>
+                <Text style={styles.postTitle}>{post.title}</Text>
+                <View style={[styles.scamTypeBadge, { backgroundColor: getScamTypeColor(post.scamType) }]}>
+                  <Text style={styles.scamTypeText}>
+                    {(post.scamType || '').replace('-', ' ').toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+              
+              <Text style={styles.postContent} numberOfLines={3}>
+                {post.content}
               </Text>
-              <Text style={styles.postDate}>
-                {new Date(post.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-            
-            <View style={styles.postFooter}>
-              <Text style={styles.postLocation}>{post.region}, {post.pincode}</Text>
-              <View style={styles.postStats}>
-                <Text style={styles.postViews}>{post.views} views</Text>
-                <Text style={styles.postVotes}>
-                  {post.votes?.upvotes || 0} ↑ {post.votes?.downvotes || 0} ↓
+              
+              <View style={styles.postMeta}>
+                <Text style={styles.postAuthor}>
+                  {post.isAnonymous ? 'Anonymous' : post.author?.name || 'Unknown'}
+                </Text>
+                <Text style={styles.postDate}>
+                  {new Date(post.createdAt).toLocaleDateString()}
                 </Text>
               </View>
+              
+              <View style={styles.postFooter}>
+                <Text style={styles.postLocation}>{post.region}, {post.pincode}</Text>
+                <View style={styles.postStats}>
+                  <Text style={styles.postViews}>{post.views || 0} views</Text>
+                  <Text style={styles.postVotes}>
+                    {post.votes?.upvotes || 0} ↑ {post.votes?.downvotes || 0} ↓
+                  </Text>
+                </View>
+              </View>
             </View>
-          </View>
-        ))}
+          ))
+        )}
       </ScrollView>
 
       {/* Create Post Modal */}
-      {showCreateModal && (
+      <Modal
+        visible={showCreateModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowCreateModal(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -243,6 +294,7 @@ const CommunityScreen = ({ navigation }) => {
                 value={newPost.title}
                 onChangeText={(value) => setNewPost(prev => ({ ...prev, title: value }))}
                 placeholder="Enter post title"
+                maxLength={200}
               />
 
               <Text style={styles.label}>Content *</Text>
@@ -253,28 +305,31 @@ const CommunityScreen = ({ navigation }) => {
                 placeholder="Share your experience..."
                 multiline
                 numberOfLines={4}
+                maxLength={2000}
               />
 
               <Text style={styles.label}>Scam Type *</Text>
-              <View style={styles.scamTypeContainer}>
-                {['phishing', 'investment', 'romance', 'tech-support', 'fake-calls', 'social-media', 'upi-fraud', 'banking', 'other'].map((type) => (
-                  <TouchableOpacity
-                    key={type}
-                    style={[
-                      styles.scamTypeOption,
-                      newPost.scamType === type && styles.scamTypeOptionActive
-                    ]}
-                    onPress={() => setNewPost(prev => ({ ...prev, scamType: type }))}
-                  >
-                    <Text style={[
-                      styles.scamTypeOptionText,
-                      newPost.scamType === type && styles.scamTypeOptionTextActive
-                    ]}>
-                      {type.replace('-', ' ').toUpperCase()}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.scamTypeContainer}>
+                  {['phishing', 'investment', 'romance', 'tech-support', 'fake-calls', 'social-media', 'upi-fraud', 'banking', 'other'].map((type) => (
+                    <TouchableOpacity
+                      key={type}
+                      style={[
+                        styles.scamTypeOption,
+                        newPost.scamType === type && styles.scamTypeOptionActive
+                      ]}
+                      onPress={() => setNewPost(prev => ({ ...prev, scamType: type }))}
+                    >
+                      <Text style={[
+                        styles.scamTypeOptionText,
+                        newPost.scamType === type && styles.scamTypeOptionTextActive
+                      ]}>
+                        {type.replace('-', ' ').toUpperCase()}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
 
               <Text style={styles.label}>Region *</Text>
               <View style={styles.regionContainer}>
@@ -302,7 +357,7 @@ const CommunityScreen = ({ navigation }) => {
                 style={styles.input}
                 value={newPost.pincode}
                 onChangeText={(value) => setNewPost(prev => ({ ...prev, pincode: value }))}
-                placeholder="Enter pincode (6 digits)"
+                placeholder="Enter 6-digit pincode"
                 keyboardType="numeric"
                 maxLength={6}
               />
@@ -312,7 +367,7 @@ const CommunityScreen = ({ navigation }) => {
                 style={styles.input}
                 value={newPost.tags}
                 onChangeText={(value) => setNewPost(prev => ({ ...prev, tags: value }))}
-                placeholder="Enter tags separated by commas"
+                placeholder="awareness, warning, etc."
               />
 
               <TouchableOpacity
@@ -334,15 +389,15 @@ const CommunityScreen = ({ navigation }) => {
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.createButton}
+                style={styles.submitButton}
                 onPress={handleCreatePost}
               >
-                <Text style={styles.createButtonText}>Create Post</Text>
+                <Text style={styles.submitButtonText}>Create Post</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 };
@@ -356,6 +411,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f8f9fa',
   },
   loadingText: {
     fontSize: 16,
@@ -369,17 +425,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
+    paddingTop: 50,
   },
   backButton: {
     fontSize: 18,
     color: '#3498db',
+    fontWeight: '600',
   },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#2c3e50',
   },
-  createButton: {
+  createButtonHeader: {
     fontSize: 16,
     color: '#e74c3c',
     fontWeight: '600',
@@ -387,6 +445,8 @@ const styles = StyleSheet.create({
   searchContainer: {
     padding: 15,
     backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
   searchInput: {
     borderWidth: 1,
@@ -399,6 +459,22 @@ const styles = StyleSheet.create({
   postsContainer: {
     flex: 1,
     padding: 15,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
   },
   postCard: {
     backgroundColor: 'white',
@@ -431,7 +507,7 @@ const styles = StyleSheet.create({
   },
   scamTypeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '600',
   },
   postContent: {
@@ -458,6 +534,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
   postLocation: {
     fontSize: 12,
@@ -477,21 +556,15 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: 'white',
-    borderRadius: 10,
-    width: '90%',
-    maxHeight: '80%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -507,18 +580,20 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   modalCloseButton: {
-    fontSize: 24,
+    fontSize: 28,
     color: '#999',
+    fontWeight: '300',
   },
   modalBody: {
     padding: 20,
+    maxHeight: 500,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#2c3e50',
     marginBottom: 8,
-    marginTop: 16,
+    marginTop: 12,
   },
   input: {
     borderWidth: 1,
@@ -540,17 +615,15 @@ const styles = StyleSheet.create({
   },
   scamTypeContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 10,
+    marginVertical: 8,
   },
   scamTypeOption: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
     borderColor: '#ddd',
     marginRight: 8,
-    marginBottom: 8,
     backgroundColor: 'white',
   },
   scamTypeOptionActive: {
@@ -558,7 +631,7 @@ const styles = StyleSheet.create({
     borderColor: '#9b59b6',
   },
   scamTypeOptionText: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#666',
   },
   scamTypeOptionTextActive: {
@@ -568,11 +641,11 @@ const styles = StyleSheet.create({
   regionContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 10,
+    marginVertical: 8,
   },
   regionOption: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
     borderColor: '#ddd',
@@ -596,10 +669,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 15,
+    marginBottom: 10,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderWidth: 2,
     borderColor: '#ddd',
     borderRadius: 4,
@@ -613,7 +687,7 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   checkboxLabel: {
@@ -629,7 +703,7 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ddd',
@@ -641,14 +715,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  createButton: {
+  submitButton: {
     flex: 1,
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
     backgroundColor: '#e74c3c',
     alignItems: 'center',
   },
-  createButtonText: {
+  submitButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

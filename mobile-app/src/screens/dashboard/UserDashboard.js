@@ -149,6 +149,12 @@ const UserDashboard = ({ navigation }) => {
       color: '#e74c3c',
     },
     {
+      title: 'My Incidents',
+      icon: '📋',
+      onPress: () => navigation.navigate('IncidentList'),
+      color: '#8e44ad',
+    },
+    {
       title: 'Community',
       icon: '👥',
       onPress: () => navigation.navigate('Community'),

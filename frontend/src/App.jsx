@@ -25,6 +25,8 @@ import MapPage from "./pages/MapPage/MapPage";
 import Helpline from "./pages/Helpline/Helpline";
 import ScammerDatabase from "./pages/ScammerDatabase/ScammerDatabase";
 import VideoGallery from './pages/VideoGallery/VideoGallery';
+import Leaderboard from './pages/Leaderboard/Leaderboard';
+import PointsManagement from './pages/AdminDashboard/PointsManagement';
 
 function App() {
   const { authUser, authRole, initializeAuth } = useAuthStore();
@@ -70,6 +72,7 @@ function App() {
             <Route path="/helpline" element={<Helpline />} />
             <Route path="/scammer-database" element={<ScammerDatabase />} />
             <Route path="/video" element={<VideoGallery/>} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/view-user/:id" element={<UserProfile />} />
         <Route path="/report" element={!authUser ? <Navigate to='/login'/>: <IncidentForm />} />
         <Route path="/check-approval" element={<CheckApproval />} />
@@ -102,6 +105,14 @@ function App() {
             !authUser ? <Navigate to="/login" /> : 
             authRole !== 'user' ? <Navigate to="/" /> : 
             <UserDashboard />
+          } 
+        />
+        <Route 
+          path="/admin/points-management" 
+          element={
+            !authUser ? <Navigate to="/login" /> : 
+            authRole !== 'admin' ? <Navigate to="/" /> : 
+            <PointsManagement />
           } 
         />
       </Routes>

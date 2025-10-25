@@ -13,7 +13,10 @@ import {
   MessageSquare,
   Star,
   Plus,
-  Users
+  Users,
+  Trophy,
+  Award,
+  Crown
 } from 'lucide-react';
 
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -27,6 +30,8 @@ const UserDashboard = () => {
   const [feedback, setFeedback] = useState('');
   const [rating, setRating] = useState(5);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [userPoints, setUserPoints] = useState(null);
+  const [userRank, setUserRank] = useState(null);
 
   useEffect(() => {
     if (authRole === 'user') {
@@ -39,10 +44,31 @@ const UserDashboard = () => {
       setLoading(true);
       const incidents = await getUserIncidents();
       setUserIncidents(incidents);
+      await fetchUserPoints();
     } catch (error) {
       console.error('Error fetching user data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserPoints = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/points/user-points`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserPoints(data.data.userPoints);
+        setUserRank(data.data.rank);
+      }
+    } catch (error) {
+      console.error('Error fetching user points:', error);
     }
   };
 
@@ -148,6 +174,41 @@ const UserDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">User Dashboard</h1>
           <p className="text-gray-600">Welcome back, {authUser?.firstName}!</p>
         </motion.div>
+
+        {/* Points Display */}
+        {userPoints && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-lg p-6 mb-8"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="p-3 bg-white bg-opacity-20 rounded-full">
+                  <Trophy className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-white">Your Points & Rank</h3>
+                  <p className="text-white text-opacity-90">Keep contributing to earn more points!</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-4xl font-bold text-white">{userPoints.totalPoints}</div>
+                <div className="text-white text-opacity-90">points</div>
+                <div className="text-sm text-white text-opacity-80">Rank #{userRank}</div>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Crown className="w-5 h-5 text-white" />
+                <span className="text-white font-semibold">{userPoints.level}</span>
+              </div>
+              <Link to="/leaderboard" className="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition-all">
+                View Leaderboard
+              </Link>
+            </div>
+          </motion.div>
+        )}
 
         {/* Stats Cards */}
         <motion.div

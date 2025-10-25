@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Menu, Search, Bell, User, LogOut, Shield, Users, AlertTriangle, MessageCircle, Map, Phone, Database } from "lucide-react";
+import { Menu, Search, Bell, User, LogOut, Shield, Users, AlertTriangle, MessageCircle, Map, Phone, Database, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../../stores/authStore";
 import AvatarImg from './avatar.jpeg'
@@ -70,6 +70,10 @@ const Navbar = () => {
               <Database className="w-4 h-4 mr-1" />
               Scammer DB
             </Link>
+            <Link to="/video" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+              <Video className="w-4 h-4 mr-1" />
+              Video Gallery
+            </Link>
           </>
         );
       
@@ -101,6 +105,10 @@ const Navbar = () => {
             <Link to="/scammer-database" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Database className="w-4 h-4 mr-1" />
               Scammer DB
+            </Link>
+            <Link to="/video" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+              <Video className="w-4 h-4 mr-1" />
+              Video Gallery
             </Link>
           </>
         );
@@ -135,6 +143,10 @@ const Navbar = () => {
             <Link to="/scammer-database" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
               <Database className="w-4 h-4 mr-1" />
               Scammer DB
+            </Link>
+            <Link to="/video" className="text-base font-medium text-gray-700 hover:text-primary flex items-center">
+              <Video className="w-4 h-4 mr-1" />
+              Video Gallery
             </Link>
           </>
         );
@@ -193,6 +205,12 @@ const Navbar = () => {
                 Scammer DB
               </Link>
             </li>
+            <li>
+              <Link to="/video" className="flex items-center">
+                <Video className="w-4 h-4 mr-2" />
+                Video Gallery
+              </Link>
+            </li>
           </>
         );
       
@@ -229,6 +247,12 @@ const Navbar = () => {
               <Link to="/scammer-database" className="flex items-center">
                 <Database className="w-4 h-4 mr-2" />
                 Scammer DB
+              </Link>
+            </li>
+            <li>
+              <Link to="/video" className="flex items-center">
+                <Video className="w-4 h-4 mr-2" />
+                Video Gallery
               </Link>
             </li>
           </>
@@ -268,6 +292,12 @@ const Navbar = () => {
               <Link to="/scammer-database" className="flex items-center">
                 <Database className="w-4 h-4 mr-2" />
                 Scammer DB
+              </Link>
+            </li>
+            <li>
+              <Link to="/video" className="flex items-center">
+                <Video className="w-4 h-4 mr-2" />
+                Video Gallery
               </Link>
             </li>
           </>

@@ -15,7 +15,9 @@ const adminRoutes = require('./routes/admin.routes.js')
 const communityRoutes = require('./routes/community.routes.js')
 const mapRoutes = require('./routes/map.routes.js')
 const helplineRoutes = require('./routes/helpline.routes.js')
-const scammerRoutes = require('./routes/scammer.routes.js')// NEW: Video routes
+const scammerRoutes = require('./routes/scammer.routes.js')
+const videoRoutes = require('./routes/video.routes.js')
+const pointsRoutes = require('./routes/points.routes.js')
 
 // Register routes
 
@@ -83,7 +85,8 @@ app.use('/api/community', communityRoutes);
 app.use('/api/map', mapRoutes);
 app.use('/api/helpline', helplineRoutes);
 app.use('/api/scammers', scammerRoutes);
-
+app.use('/api/videos', videoRoutes);
+app.use('/api/points', pointsRoutes);
 // Graceful Shutdown
 process.on('SIGINT', async () => {
     console.log("Shutting down server...");

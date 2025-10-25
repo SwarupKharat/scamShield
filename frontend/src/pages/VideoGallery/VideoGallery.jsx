@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '../../stores/authStore';
+import { axiosInstance } from '../../stores/axios';
 import UploadVideoModal from '../../components/UploadVideoModal/UploadVideoModal';
 import VideoCard from '../../components/VideoCard/VideoCard';
 import VideoStats from '../../components/VideoStats/VideoStats';
@@ -24,7 +25,6 @@ const VideoGallery = () => {
     hasPrev: false
   });
 
-  // Fetch videos
   const fetchVideos = async (page = 1) => {
     try {
       setLoading(true);
@@ -34,21 +34,11 @@ const VideoGallery = () => {
         ...filters
       });
 
-      const response = await fetch(`http://localhost:5000/api/videos?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axiosInstance.get(`/videos?${queryParams}`);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch videos');
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setVideos(data.data.videos);
-        setPagination(data.data.pagination);
+      if (response.data.success) {
+        setVideos(response.data.data.videos || []);
+        setPagination(response.data.data.pagination || {});
       }
     } catch (error) {
       console.error('Error fetching videos:', error);
@@ -74,7 +64,6 @@ const VideoGallery = () => {
   const handleVideoUploaded = () => {
     setShowUploadModal(false);
     fetchVideos(1);
-    toast.success('Video uploaded successfully!');
   };
 
   const handleVideoDeleted = (videoId) => {
@@ -98,6 +87,8 @@ const VideoGallery = () => {
     { value: 'tech-support', label: 'Tech Support Scams' },
     { value: 'fake-calls', label: 'Fake Calls' },
     { value: 'social-media', label: 'Social Media Scams' },
+    { value: 'upi-fraud', label: 'UPI Fraud' },
+    { value: 'banking', label: 'Banking Scams' },
     { value: 'other', label: 'Other' }
   ];
 
@@ -114,7 +105,6 @@ const VideoGallery = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -123,22 +113,22 @@ const VideoGallery = () => {
                 Watch and share scam awareness videos from your community
               </p>
             </div>
-            <button
-              onClick={() => setShowUploadModal(true)}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              Upload Video
-            </button>
+            {authUser && (
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Upload Video
+              </button>
+            )}
           </div>
 
-          {/* Video Stats */}
           <VideoStats />
         </div>
 
-        {/* Filters */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
@@ -207,7 +197,6 @@ const VideoGallery = () => {
           </div>
         </div>
 
-        {/* Videos Grid */}
         <div>
           {loading ? (
             <div className="flex justify-center items-center py-12">
@@ -235,7 +224,6 @@ const VideoGallery = () => {
           )}
         </div>
 
-        {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="flex justify-center mt-8">
             <nav className="flex items-center space-x-2">
@@ -285,7 +273,6 @@ const VideoGallery = () => {
           </div>
         )}
 
-        {/* Upload Video Modal */}
         {showUploadModal && (
           <UploadVideoModal
             onClose={() => setShowUploadModal(false)}

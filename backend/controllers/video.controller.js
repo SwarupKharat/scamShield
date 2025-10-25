@@ -77,6 +77,11 @@ const generateThumbnail = (videoPath, outputPath) => {
 // Upload a new video
 const uploadVideo = async (req, res) => {
     try {
+        console.log('Upload video request received');
+        console.log('User:', req.user);
+        console.log('File:', req.file);
+        console.log('Body:', req.body);
+
         if (!req.file) {
             return res.status(400).json({
                 success: false,
@@ -84,8 +89,9 @@ const uploadVideo = async (req, res) => {
             });
         }
 
+        // FIX: Change req.user.id to req.user._id
+        const uploaderId = req.user._id;
         const { title, description, scamType, region, pincode, isAnonymous, tags } = req.body;
-        const uploaderId = req.user.id;
 
         // Validate required fields
         if (!title || !description || !scamType || !region || !pincode) {
@@ -97,16 +103,33 @@ const uploadVideo = async (req, res) => {
         }
 
         // Get coordinates from pincode
-        const coordinates = await locationService.getCoordinatesFromPincode(pincode);
+        let coordinates = { latitude: 0, longitude: 0 };
+        try {
+            coordinates = await locationService.getCoordinatesFromPincode(pincode);
+        } catch (error) {
+            console.log('Could not get coordinates for pincode:', pincode);
+        }
 
         // Get video metadata
-        const metadata = await getVideoMetadata(req.file.path);
+        let metadata = { duration: 0, width: 0, height: 0 };
+        try {
+            metadata = await getVideoMetadata(req.file.path);
+        } catch (error) {
+            console.log('Could not get video metadata:', error.message);
+        }
 
         // Generate thumbnail
         const thumbnailDir = './uploads/thumbnails';
         await fs.mkdir(thumbnailDir, { recursive: true });
         const thumbnailPath = path.join(thumbnailDir, `thumb-${Date.now()}.jpg`);
-        await generateThumbnail(req.file.path, thumbnailPath);
+        
+        let finalThumbnailPath = thumbnailPath;
+        try {
+            await generateThumbnail(req.file.path, thumbnailPath);
+        } catch (error) {
+            console.log('Could not generate thumbnail:', error.message);
+            finalThumbnailPath = null;
+        }
 
         // Create video document
         const video = new Video({
@@ -114,19 +137,19 @@ const uploadVideo = async (req, res) => {
             description,
             uploader: uploaderId,
             videoUrl: req.file.path,
-            thumbnailUrl: thumbnailPath,
-            duration: Math.round(metadata.duration),
+            thumbnailUrl: finalThumbnailPath,
+            duration: Math.round(metadata.duration || 0),
             fileSize: req.file.size,
             resolution: {
-                width: metadata.width,
-                height: metadata.height
+                width: metadata.width || 0,
+                height: metadata.height || 0
             },
             format: path.extname(req.file.originalname).substring(1).toLowerCase(),
             scamType,
             region,
             pincode,
             coordinates,
-            isAnonymous: isAnonymous || false,
+            isAnonymous: isAnonymous === 'true' || isAnonymous === true,
             tags: tags ? (Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim())) : [],
             status: 'active',
             processingStatus: 'completed'
@@ -305,7 +328,8 @@ const addComment = async (req, res) => {
     try {
         const { id } = req.params;
         const { content, isAnonymous } = req.body;
-        const author = req.user ? req.user.id : "68efa7b98d954a91f55c71ab";
+        // FIX: Change req.user.id to req.user._id
+        const author = req.user._id;
 
         if (!content) {
             return res.status(400).json({
@@ -352,7 +376,8 @@ const voteVideo = async (req, res) => {
     try {
         const { id } = req.params;
         const { voteType } = req.body;
-        const userId = req.user ? req.user.id : "68efa7b98d954a91f55c71ab";
+        // FIX: Change req.user.id to req.user._id
+        const userId = req.user._id;
 
         if (!['upvote', 'downvote'].includes(voteType)) {
             return res.status(400).json({
@@ -369,11 +394,11 @@ const voteVideo = async (req, res) => {
             });
         }
 
-        const existingVote = video.votes.voters.find(voter => voter.user.toString() === userId);
+        const existingVote = video.votes.voters.find(voter => voter.user.toString() === userId.toString());
         
         if (existingVote) {
             if (existingVote.voteType === voteType) {
-                video.votes.voters = video.votes.voters.filter(voter => voter.user.toString() !== userId);
+                video.votes.voters = video.votes.voters.filter(voter => voter.user.toString() !== userId.toString());
                 if (voteType === 'upvote') {
                     video.votes.upvotes -= 1;
                 } else {
@@ -423,7 +448,8 @@ const reportVideo = async (req, res) => {
     try {
         const { id } = req.params;
         const { reason } = req.body;
-        const userId = req.user ? req.user.id : "68efa7b98d954a91f55c71ab";
+        // FIX: Change req.user.id to req.user._id
+        const userId = req.user._id;
 
         if (!reason) {
             return res.status(400).json({
@@ -440,7 +466,7 @@ const reportVideo = async (req, res) => {
             });
         }
 
-        const existingReport = video.reportedBy.find(report => report.user.toString() === userId);
+        const existingReport = video.reportedBy.find(report => report.user.toString() === userId.toString());
         if (existingReport) {
             return res.status(400).json({
                 success: false,
@@ -472,7 +498,8 @@ const reportVideo = async (req, res) => {
 // Get user's videos
 const getUserVideos = async (req, res) => {
     try {
-        const userId = req.user ? req.user.id : "68efa7b98d954a91f55c71ab";
+        // FIX: Change req.user.id to req.user._id
+        const userId = req.user._id;
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
@@ -513,7 +540,8 @@ const getUserVideos = async (req, res) => {
 const deleteVideo = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user ? req.user.id : "68efa7b98d954a91f55c71ab";
+        // FIX: Change req.user.id to req.user._id
+        const userId = req.user._id;
         const userRole = req.user.role;
 
         const video = await Video.findById(id);
@@ -524,7 +552,7 @@ const deleteVideo = async (req, res) => {
             });
         }
 
-        if (video.uploader.toString() !== userId && userRole !== 'admin') {
+        if (video.uploader.toString() !== userId.toString() && userRole !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'You are not authorized to delete this video'
@@ -533,10 +561,6 @@ const deleteVideo = async (req, res) => {
 
         video.status = 'deleted';
         await video.save();
-
-        // Optionally delete physical files
-        // await fs.unlink(video.videoUrl);
-        // await fs.unlink(video.thumbnailUrl);
 
         res.json({
             success: true,

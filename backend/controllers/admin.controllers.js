@@ -1,6 +1,7 @@
 const registeredUsersModel = require('../models/registeredUsers.model');
 const User = require('../models/user.model.js'); 
 const Incident = require('../models/incident.model.js');
+const { UserPoints } = require('../models/points.model.js');
 const bcrypt = require('bcryptjs')
 
 exports.verify = async (req, res) => {
@@ -45,6 +46,14 @@ exports.verify = async (req, res) => {
 
             await newUser.save();
             await registeredUsersModel.findByIdAndDelete(id);  // Ensure user is deleted after newUser is saved
+
+            // Initialize user points
+            const userPoints = new UserPoints({
+                userId: newUser._id,
+                totalPoints: 0,
+                level: 'Bronze'
+            });
+            await userPoints.save();
 
             return res.status(200).json({
                 success: true,

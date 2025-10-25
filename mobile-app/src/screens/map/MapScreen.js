@@ -9,9 +9,10 @@ import {
   Alert,
 } from 'react-native';
 import MapView, { Marker, Circle } from 'react-native-maps';
-import { API_BASE_URL } from '../../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+
+const API_BASE_URL = 'http://192.168.1.6:5000'; // Use your IP
 
 const MapScreen = ({ navigation }) => {
   const [mapData, setMapData] = useState({
@@ -24,7 +25,7 @@ const MapScreen = ({ navigation }) => {
   const [selectedType, setSelectedType] = useState('all');
   const [selectedSeverity, setSelectedSeverity] = useState('all');
   const [region, setRegion] = useState({
-    latitude: 20.5937,
+    latitude: 20.5937, // Center of India
     longitude: 78.9629,
     latitudeDelta: 10,
     longitudeDelta: 10,
@@ -38,26 +39,19 @@ const MapScreen = ({ navigation }) => {
     try {
       const token = await AsyncStorage.getItem('token');
       console.log('Fetching map data from backend...');
+      console.log('Token:', token ? 'Present' : 'Missing');
       
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      console.log('Making API requests...');
+
       const [incidentsRes, postsRes, hotspotsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/map/incidents`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_BASE_URL}/api/map/community`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_BASE_URL}/api/map/hotspots`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        fetch(`${API_BASE_URL}/api/map/incidents`, { headers }),
+        fetch(`${API_BASE_URL}/api/map/community`, { headers }),
+        fetch(`${API_BASE_URL}/api/map/hotspots`, { headers })
       ]);
 
       console.log('Map data responses:', {
@@ -70,19 +64,69 @@ const MapScreen = ({ navigation }) => {
       const postsData = await postsRes.json();
       const hotspotsData = await hotspotsRes.json();
 
-      if (incidentsData.success && postsData.success && hotspotsData.success) {
-        setMapData({
-          incidents: incidentsData.data || [],
-          posts: postsData.data || [],
-          hotspots: hotspotsData.data || [],
-        });
+      console.log('Parsed data:', {
+        incidents: incidentsData,
+        posts: postsData,
+        hotspots: hotspotsData
+      });
+
+      // Safely extract arrays from responses
+      const incidents = Array.isArray(incidentsData?.data) 
+        ? incidentsData.data 
+        : Array.isArray(incidentsData) 
+        ? incidentsData 
+        : [];
+
+      const posts = Array.isArray(postsData?.data) 
+        ? postsData.data 
+        : Array.isArray(postsData) 
+        ? postsData 
+        : [];
+
+      const hotspots = Array.isArray(hotspotsData?.data) 
+        ? hotspotsData.data 
+        : Array.isArray(hotspotsData) 
+        ? hotspotsData 
+        : [];
+
+      console.log('Extracted arrays:', {
+        incidentsCount: incidents.length,
+        postsCount: posts.length,
+        hotspotsCount: hotspots.length
+      });
+
+      setMapData({
+        incidents,
+        posts,
+        hotspots,
+      });
+
+      // If we have data, center map on first incident/post
+      if (incidents.length > 0 || posts.length > 0) {
+        const firstItem = incidents[0] || posts[0];
+        if (firstItem && firstItem.latitude && firstItem.longitude) {
+          setRegion({
+            latitude: firstItem.latitude,
+            longitude: firstItem.longitude,
+            latitudeDelta: 2,
+            longitudeDelta: 2,
+          });
+        }
       }
+
     } catch (error) {
       console.error('Error fetching map data:', error);
       Toast.show({
         type: 'error',
         text1: 'Error',
         text2: 'Failed to load map data',
+      });
+      
+      // Set empty arrays on error
+      setMapData({
+        incidents: [],
+        posts: [],
+        hotspots: [],
       });
     } finally {
       setLoading(false);
@@ -109,23 +153,35 @@ const MapScreen = ({ navigation }) => {
     }
   };
 
-  const getMarkerSize = (count) => {
-    if (count >= 10) return 20;
-    if (count >= 5) return 15;
-    if (count >= 2) return 10;
-    return 5;
+  const getHotspotRadius = (count) => {
+    // Returns radius in meters
+    if (count >= 10) return 5000;
+    if (count >= 5) return 3000;
+    if (count >= 2) return 2000;
+    return 1000;
   };
 
-  const filteredIncidents = mapData.incidents.filter(incident => {
-    if (selectedType !== 'all' && selectedType !== 'incident') return false;
-    if (selectedSeverity !== 'all' && incident.severity !== selectedSeverity) return false;
-    return true;
-  });
+  // Safe filtering with array checks
+  const filteredIncidents = Array.isArray(mapData.incidents) 
+    ? mapData.incidents.filter(incident => {
+        if (selectedType !== 'all' && selectedType !== 'incident') return false;
+        if (selectedSeverity !== 'all' && incident.severity !== selectedSeverity) return false;
+        // Ensure incident has coordinates
+        return incident.latitude && incident.longitude;
+      })
+    : [];
 
-  const filteredPosts = mapData.posts.filter(post => {
-    if (selectedType !== 'all' && selectedType !== 'post') return false;
-    return true;
-  });
+  const filteredPosts = Array.isArray(mapData.posts)
+    ? mapData.posts.filter(post => {
+        if (selectedType !== 'all' && selectedType !== 'post') return false;
+        // Ensure post has coordinates
+        return post.latitude && post.longitude;
+      })
+    : [];
+
+  const validHotspots = Array.isArray(mapData.hotspots)
+    ? mapData.hotspots.filter(hotspot => hotspot.latitude && hotspot.longitude)
+    : [];
 
   if (loading) {
     return (
@@ -162,7 +218,7 @@ const MapScreen = ({ navigation }) => {
             onPress={() => setSelectedType('incident')}
           >
             <Text style={[styles.filterText, selectedType === 'incident' && styles.filterTextActive]}>
-              Incidents
+              Incidents ({mapData.incidents.length})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -170,7 +226,7 @@ const MapScreen = ({ navigation }) => {
             onPress={() => setSelectedType('post')}
           >
             <Text style={[styles.filterText, selectedType === 'post' && styles.filterTextActive]}>
-              Posts
+              Posts ({mapData.posts.length})
             </Text>
           </TouchableOpacity>
         </ScrollView>
@@ -182,7 +238,7 @@ const MapScreen = ({ navigation }) => {
               onPress={() => setSelectedSeverity('all')}
             >
               <Text style={[styles.severityText, selectedSeverity === 'all' && styles.severityTextActive]}>
-                All
+                All Severity
               </Text>
             </TouchableOpacity>
             {['critical', 'high', 'medium', 'low'].map((severity) => (
@@ -206,44 +262,44 @@ const MapScreen = ({ navigation }) => {
         onRegionChangeComplete={setRegion}
       >
         {/* Hotspots */}
-        {mapData.hotspots.map((hotspot, index) => (
+        {validHotspots.map((hotspot, index) => (
           <Circle
             key={`hotspot-${index}`}
             center={{
-              latitude: hotspot.latitude,
-              longitude: hotspot.longitude,
+              latitude: parseFloat(hotspot.latitude),
+              longitude: parseFloat(hotspot.longitude),
             }}
-            radius={getMarkerSize(hotspot.count || hotspot.incidentCount + hotspot.postCount) * 1000}
-            fillColor="rgba(231, 76, 60, 0.3)"
-            strokeColor="rgba(231, 76, 60, 0.8)"
+            radius={getHotspotRadius(hotspot.count || hotspot.incidentCount + hotspot.postCount)}
+            fillColor="rgba(231, 76, 60, 0.2)"
+            strokeColor="rgba(231, 76, 60, 0.6)"
             strokeWidth={2}
           />
         ))}
 
         {/* Incident Markers */}
-        {filteredIncidents.map((incident) => (
+        {filteredIncidents.map((incident, index) => (
           <Marker
-            key={`incident-${incident.id}`}
+            key={`incident-${incident._id || incident.id || index}`}
             coordinate={{
-              latitude: incident.latitude,
-              longitude: incident.longitude,
+              latitude: parseFloat(incident.latitude),
+              longitude: parseFloat(incident.longitude),
             }}
-            title={incident.title}
-            description={`${incident.location} - ${incident.severity}`}
+            title={incident.title || 'Incident'}
+            description={`${incident.location || incident.region || ''} - ${incident.severity || 'Unknown'}`}
             pinColor={getMarkerColor('incident', incident.severity)}
           />
         ))}
 
         {/* Post Markers */}
-        {filteredPosts.map((post) => (
+        {filteredPosts.map((post, index) => (
           <Marker
-            key={`post-${post.id}`}
+            key={`post-${post._id || post.id || index}`}
             coordinate={{
-              latitude: post.latitude,
-              longitude: post.longitude,
+              latitude: parseFloat(post.latitude),
+              longitude: parseFloat(post.longitude),
             }}
-            title={post.title}
-            description={`${post.region} - ${post.scamType}`}
+            title={post.title || 'Community Post'}
+            description={`${post.region || ''} - ${post.scamType || ''}`}
             pinColor={getMarkerColor('post')}
           />
         ))}
@@ -259,7 +315,7 @@ const MapScreen = ({ navigation }) => {
           <Text style={styles.statLabel}>Posts</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{mapData.hotspots.length}</Text>
+          <Text style={styles.statNumber}>{validHotspots.length}</Text>
           <Text style={styles.statLabel}>Hotspots</Text>
         </View>
       </View>
@@ -302,6 +358,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f8f9fa',
   },
   loadingText: {
     fontSize: 16,
@@ -315,10 +372,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
+    paddingTop: 50, // Add top padding for status bar
   },
   backButton: {
     fontSize: 18,
     color: '#3498db',
+    fontWeight: '600',
   },
   title: {
     fontSize: 20,
@@ -326,12 +385,12 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   refreshButton: {
-    fontSize: 18,
-    color: '#3498db',
+    fontSize: 20,
   },
   filtersContainer: {
     backgroundColor: 'white',
     paddingVertical: 10,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
   },
@@ -358,6 +417,7 @@ const styles = StyleSheet.create({
   },
   severityFilters: {
     marginTop: 10,
+    paddingLeft: 5,
   },
   severityButton: {
     paddingHorizontal: 12,

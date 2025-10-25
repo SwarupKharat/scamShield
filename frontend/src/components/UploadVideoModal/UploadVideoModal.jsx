@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { toast } from 'react-hot-toast';
+import { axiosInstance } from '../../stores/axios';
 
 const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
   const [formData, setFormData] = useState({
@@ -24,6 +25,8 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
     { value: 'tech-support', label: 'Tech Support Scams' },
     { value: 'fake-calls', label: 'Fake Calls' },
     { value: 'social-media', label: 'Social Media Scams' },
+    { value: 'upi-fraud', label: 'UPI Fraud' },
+    { value: 'banking', label: 'Banking Scams' },
     { value: 'other', label: 'Other' }
   ];
 
@@ -39,14 +42,12 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
   const handleVideoSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type
       const validTypes = ['video/mp4', 'video/avi', 'video/quicktime', 'video/webm', 'video/x-matroska'];
       if (!validTypes.includes(file.type)) {
         toast.error('Invalid file type. Please upload a video file.');
         return;
       }
 
-      // Validate file size (500MB max)
       const maxSize = 500 * 1024 * 1024;
       if (file.size > maxSize) {
         toast.error('File size exceeds 500MB limit.');
@@ -80,8 +81,14 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
       return;
     }
 
+    if (formData.pincode.length !== 6) {
+      toast.error('Pincode must be 6 digits');
+      return;
+    }
+
     try {
       setUploading(true);
+      
       const submitData = new FormData();
       submitData.append('video', videoFile);
       submitData.append('title', formData.title);
@@ -92,6 +99,7 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
       submitData.append('isAnonymous', formData.isAnonymous);
       submitData.append('tags', formData.tags);
 
+      // Use XMLHttpRequest for upload progress
       const xhr = new XMLHttpRequest();
 
       xhr.upload.addEventListener('progress', (e) => {
@@ -103,25 +111,41 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
 
       xhr.addEventListener('load', () => {
         if (xhr.status === 201) {
-          const response = JSON.parse(xhr.responseText);
-          if (response.success) {
-            onVideoUploaded();
-          } else {
-            toast.error(response.message || 'Upload failed');
+          try {
+            const response = JSON.parse(xhr.responseText);
+            if (response.success) {
+              toast.success('Video uploaded successfully!');
+              onVideoUploaded();
+            } else {
+              toast.error(response.message || 'Upload failed');
+            }
+          } catch (parseError) {
+            console.error('Error parsing response:', parseError);
+            toast.error('Upload failed - invalid response');
           }
+        } else if (xhr.status === 401) {
+          toast.error('Authentication failed. Please login again.');
         } else {
-          toast.error('Upload failed');
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            toast.error(errorData.message || 'Upload failed');
+          } catch {
+            toast.error('Upload failed');
+          }
         }
         setUploading(false);
       });
 
       xhr.addEventListener('error', () => {
-        toast.error('Upload failed');
+        toast.error('Network error. Please try again.');
         setUploading(false);
       });
 
       xhr.open('POST', 'http://localhost:5000/api/videos/upload');
-      xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+      
+      // Get cookies to send with request (for authentication)
+      xhr.withCredentials = true;
+      
       xhr.send(submitData);
 
     } catch (error) {
@@ -142,7 +166,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">Upload Video</h2>
           <button
@@ -156,9 +179,7 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6">
-          {/* Video Upload Area */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Video File *
@@ -201,7 +222,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
             />
           </div>
 
-          {/* Upload Progress */}
           {uploading && (
             <div className="mb-6">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -218,7 +238,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Title */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Title *
@@ -236,7 +255,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
               />
             </div>
 
-            {/* Description */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description *
@@ -254,7 +272,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
               />
             </div>
 
-            {/* Scam Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Scam Type *
@@ -276,7 +293,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
               </select>
             </div>
 
-            {/* Region */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Region *
@@ -298,7 +314,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
               </select>
             </div>
 
-            {/* Pincode */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Pincode *
@@ -317,7 +332,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
               />
             </div>
 
-            {/* Tags */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tags (comma-separated)
@@ -333,7 +347,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
               />
             </div>
 
-            {/* Anonymous Checkbox */}
             <div className="md:col-span-2 flex items-center">
               <input
                 type="checkbox"
@@ -349,7 +362,6 @@ const UploadVideoModal = ({ onClose, onVideoUploaded }) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-6 pt-6 border-t">
             <button
               type="button"
