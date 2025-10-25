@@ -1,0 +1,33 @@
+{
+  "name": "incident-reporting-system",
+  "version": "1.0.0",
+  "description": "A full-stack web application for reporting, managing, and resolving incidents efficiently",
+  "main": "setup.js",
+  "scripts": {
+    "setup": "node setup.js",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev"
+  },
+  "keywords": [
+    "incident-reporting",
+    "react",
+    "nodejs",
+    "express",
+    "mongodb",
+    "ai",
+    "dashboard"
+  ],
+  "author": "Sanket K. Belekar",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 
